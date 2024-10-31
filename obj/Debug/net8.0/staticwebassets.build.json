@@ -1,0 +1,39 @@
+{
+  "Version": 1,
+  "Hash": "ufK2a403dmB1SWnY/2stkgH1LpfuFV4l1jBiVsjwLFs=",
+  "Source": "AudioPrototype",
+  "BasePath": "_content/AudioPrototype",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "AudioPrototype\\wwwroot",
+      "Source": "AudioPrototype",
+      "ContentRoot": "D:\\Workspace\\AudioPrototype\\wwwroot\\",
+      "BasePath": "_content/AudioPrototype",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "D:\\Workspace\\AudioPrototype\\wwwroot\\index.html",
+      "SourceId": "AudioPrototype",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Workspace\\AudioPrototype\\wwwroot\\",
+      "BasePath": "_content/AudioPrototype",
+      "RelativePath": "index.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\index.html"
+    }
+  ]
+}
