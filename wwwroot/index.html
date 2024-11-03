@@ -1,49 +1,81 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test</title>
-    <style>
-        video {
-            height: 100vh;
-            width: 100vw;
-        }
-    </style>
-</head>
-<body>
-<video autoplay controls muted id="player"></video>
-<script>
-    (async () => {
-        let pc = new RTCPeerConnection();
-        pc.ontrack = t => {
-            console.log(t);
-            let player = document.getElementById("player");
-            player.srcObject = t.streams[0];
-        }
-        let result = await fetch("/signal");
-        let json = await result.json();
-        let offer = json.offer;
-        let id = json.id;
-        pc.setRemoteDescription(offer);
-        let answer = await pc.createAnswer();
-        pc.setLocalDescription(answer);
-        console.log(answer);
-        await fetch("/signal",
-            {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(
-                    {
-                        id: id,
-                        answer: answer
+
+    <script type="text/javascript">
+
+        const STUN_URL = "stun:localhost:3479";
+        const WEBSOCKET_URL = "ws://localhost:8081"
+
+        var pc, ws;
+
+        async function start() {
+            try {
+                if ('WebSocket' in window) {
+                    console.log('WebSocket is supported by your browser.');
+                } else {
+                    console.log('WebSocket is not supported by your browser.');
+                }
+                pc = new RTCPeerConnection({iceServers: [{urls: STUN_URL}]});
+
+                // Add an audio source to the peer connection.
+                const localStream = await navigator.mediaDevices.getUserMedia({video: false, audio: true});
+
+                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+                pc.ontrack = evt => {
+                    console.log(evt)
+                    document.querySelector('#audioCtl').srcObject = evt.streams[0];
+                };
+                pc.onicecandidate = evt => evt.candidate && ws.send(JSON.stringify(evt.candidate));
+
+                // Diagnostics.
+                pc.onicegatheringstatechange = () => console.log("onicegatheringstatechange: " + pc.iceGatheringState);
+                pc.oniceconnectionstatechange = () => console.log("oniceconnectionstatechange: " + pc.iceConnectionState);
+                pc.onsignalingstatechange = () => console.log("onsignalingstatechange: " + pc.signalingState);
+                pc.onconnectionstatechange = () => console.log("onconnectionstatechange: " + pc.connectionState);
+                
+                ws = new WebSocket(document.querySelector('#websockurl').value, []);
+                ws.onmessage = async function (evt) {
+                    console.log(evt);
+                    console.log(/^[\{"'\s]*candidate/.test(evt.data));
+                    if (/^[\{"'\s]*candidate/.test(evt.data)) {
+                        pc.addIceCandidate(JSON.parse(evt.data));
+                    } else {
+                        await pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(evt.data)));
+                        pc.createAnswer()
+                            .then((answer) => pc.setLocalDescription(answer))
+                            .then(() => ws.send(JSON.stringify(pc.localDescription)));
                     }
-                )
+                };
+            } catch (e) {
+                console.log(e);
             }
-        )
-    })();
-</script>
+        };
+
+        async function closePeer() {
+            await pc.close();
+            await ws.close();
+        };
+
+    </script>
+</head>
+
+<body>
+
+<div>
+    <audio controls autoplay="autoplay" id="audioCtl"/>
+</div>
+
+<div>
+    <input type="text" id="websockurl" size="40"/>
+    <button type="button" class="btn btn-success" onclick="start();">Start</button>
+    <button type="button" class="btn btn-success" onclick="closePeer();">Close</button>
+</div>
+
 </body>
-</html>
+
+<script>
+    document.querySelector('#websockurl').value = WEBSOCKET_URL;
+</script>
